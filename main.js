@@ -494,7 +494,7 @@ function redrawCards() {
   for(let i = 0; i < 4; i++) {
     txt += '<div>';
     for(let j = 0; j < 13; j++) {
-      txt += `<div class="tooltip"><div class="playingCard${cardString(i, j)} onclick="addCard(${i}, ${j})" onmousemove = 'hoverCard(event)' onmouseout = 'noHoverCard(event)'></div></div>`;
+      txt += `<div class="tooltip"><div class="playingCard${cardString((i+3) % 4, j)} onclick="addCard(${i}, ${j})" onmousemove = 'hoverCard(event)' onmouseout = 'noHoverCard(event)'></div></div>`;
     }
     txt += '</div>';
   }
@@ -570,8 +570,16 @@ const cardsInHandDiv = document.getElementById('cardsInHand');
 const jokerLimitDiv = document.getElementById('jokerLimit');
 const handLimitDiv = document.getElementById('handLimit');
 
-let playfieldJokers = {};
 let playfieldCards = {};
+
+function updateTooltips() {
+  for(let joker in playfieldJokers) {
+    let i = playfieldJokers[joker].type[0];
+    let j = playfieldJokers[joker].type[1];
+    let jokerValue = playfieldJokers[joker].value;
+    playfieldJokers[joker].tooltip = (jokerTexts.length > i && jokerTexts[i].length > j) ? [jokerTexts[i][j][0], eval('`' + jokerTexts[i][j][1] + '`')] : ['WIP', 'WIP'];
+  }
+}
 
 function addJoker(i, j, sell = false) {
   let id = 'j'+(Math.random()+'').slice(2);
@@ -595,6 +603,7 @@ function addJoker(i, j, sell = false) {
     toggleJoker();
   }
 
+  updateTooltips();
   redrawPlayfield();
 }
 
@@ -603,6 +612,7 @@ function removeJoker(id) {
 
   jokerLimitDiv.innerText = Object.keys(playfieldJokers).length;
 
+  updateTooltips();
   redrawPlayfield();
 
   changeTab(revertToTab)();
@@ -616,9 +626,9 @@ function addCard(i, j) {
 
   playfieldCards[id] = {
     id,
-    type: [i, j],
+    type: [(i + 3) % 4, j],
     modifiers: {...modifiers},
-    string: cardString(i, j)
+    string: cardString((i + 3) % 4, j)
   };
 
   handLimitDiv.innerText = Object.keys(playfieldCards).length;
@@ -886,6 +896,8 @@ function mjtoggleCardModifier(name) {
   joker.modifiers[name] = !joker.modifiers[name];
   joker.string = jokerString(joker.type[0], joker.type[1], joker.modifiers);
 
+
+  updateTooltips();
   redrawPlayfield();
   updateModifyingJoker();
 }
